@@ -1,9 +1,9 @@
-require("dotenv").config()
 const express = require("express")
 const body_parser = require("body-parser")
 const ejs = require("ejs")
 const mongoose = require("mongoose")
-const encrypt = require("mongoose-encryption")
+const bcrypt = require('bcrypt');
+const saltRounds = 10;
 
 const app = express()
 
@@ -16,9 +16,6 @@ const userSchema = new mongoose.Schema({
     name: String,
     pass: String
 })
-
-
-userSchema.plugin(encrypt,{secret: process.env.SECRET, encryptedFields: ["pass"]})
 
 const User = new mongoose.model("User",userSchema)
 
@@ -39,19 +36,25 @@ app.get("/register",(req,res)=>{
 })
 
 app.post("/register",(req,res)=>{
-    const newUser = new User({
-        name: req.body.username,
-        pass: req.body.password
+    bcrypt.hash(req.body.password, saltRounds, function(err, hash) {
+        const newPass = hash;
+        const newUser = new User({
+            name: req.body.username,
+            pass: newPass
+        })
+        newUser.save()
+        res.render("secrets")
     })
-    newUser.save()
-    res.render("secrets")
 })
 
 app.post("/login",(req,res)=>{
     
     User.findOne({name: req.body.username},(err,foundUser)=>{
         if(!err) {
-            if(foundUser) if(foundUser.pass === req.body.password) res.render("secrets")
+            if(foundUser){ bcrypt.compare(req.body.password, foundUser.pass, (err,result)=>{
+                if(result === true) res.render("Secrets")
+            })
+        }
         } else res.render(err)
     })
 })
