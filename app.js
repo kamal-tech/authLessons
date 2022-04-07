@@ -24,8 +24,8 @@ const userSchema = new mongoose.Schema({
     secret: String
 })
 userSchema.plugin(passportLocalMongoose);
-userSchema.plugin(findOrCreate)
-const User = new mongoose.model("User",userSchema)
+userSchema.plugin(findOrCreate);
+const User = new mongoose.model("User",userSchema);
 mongoose.connect("mongodb://localhost:27017/userDB");
 
 app.use(session({
@@ -64,7 +64,8 @@ passport.use(new GoogleStrategy({
 passport.use(new FacebookStrategy({
     clientID: process.env.FB_APP_ID,
     clientSecret: process.env.FB_SECRET,
-    callbackURL: "http://localhost:3000/auth/facebook/secrets"
+    callbackURL: "https://localhost:3000/auth/facebook/secrets",
+    profileFields: ["id","displayName"]
   },
   function(accessToken, refreshToken, profile, cb) {
     User.findOrCreate({ facebookId: profile.id }, function (err, user) {
